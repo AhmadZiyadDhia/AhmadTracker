@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f7f8fa">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.png">
+<meta name="apple-mobile-web-app-title" content="Ahmad">
+<title>Ahmad's App</title>
+<style>
+  :root{
+    --bg:#f7f8fa; --card:#fff; --text:#1a1d21; --muted:#7a828c;
+    --accent:#2f7d5b; --accent-soft:#e6f2ec; --border:#e8eaee;
+    --red:#d05a5a; --amber:#d9a13b; --blue:#3b6fd9; --radius:16px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  body{margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    background:var(--bg); color:var(--text); padding-bottom:84px;}
+  header{padding:18px 20px 6px;}
+  header h1{margin:0; font-size:22px; font-weight:700;}
+  header .sub{color:var(--muted); font-size:13px; margin-top:2px;}
+  .page{display:none; padding:10px 14px;}
+  .page.active{display:block;}
+  .card{background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:16px; margin-bottom:12px;}
+  .card h2{margin:0 0 10px; font-size:15px; font-weight:600; display:flex; justify-content:space-between; align-items:center;}
+  .muted{color:var(--muted); font-size:13px;}
+  button{font-family:inherit; border:none; cursor:pointer;}
+  .btn{background:var(--accent); color:#fff; border-radius:12px; padding:12px 16px; font-size:15px; font-weight:600; width:100%;}
+  .btn.small{width:auto; padding:8px 14px; font-size:13px;}
+  .btn.ghost{background:var(--accent-soft); color:var(--accent);}
+  input,select{font-family:inherit; font-size:15px; padding:10px 12px; border:1px solid var(--border);
+    border-radius:12px; background:#fff; color:var(--text); width:100%;}
+  input:focus,select:focus{outline:2px solid var(--accent-soft); border-color:var(--accent);}
+  .row{display:flex; gap:8px;} .row>*{flex:1;}
+  nav{position:fixed; bottom:0; left:0; right:0; background:#fff; border-top:1px solid var(--border);
+    display:flex; padding:6px 2px calc(6px + env(safe-area-inset-bottom)); z-index:10;}
+  nav button{flex:1; background:none; padding:7px 0; color:var(--muted); font-size:10.5px;
+    display:flex; flex-direction:column; align-items:center; gap:3px; border-radius:10px;}
+  nav button.on{color:var(--accent); font-weight:600;}
+  nav .ic{font-size:20px; line-height:1;}
+  .ring-wrap{display:flex; align-items:center; gap:16px;}
+  .ring{position:relative; width:104px; height:104px; flex:none;}
+  .ring svg{transform:rotate(-90deg);}
+  .ring .val{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:25px; font-weight:700;}
+  .ring .val span{font-size:11px; font-weight:500; color:var(--muted);}
+  .scoreparts{flex:1; display:flex; flex-direction:column; gap:5px; font-size:13px;}
+  .scoreparts>div{display:flex; justify-content:space-between;}
+  .chkrow{display:flex; align-items:center; gap:12px; padding:11px 0; border-bottom:1px solid var(--border);}
+  .chkrow:last-child{border-bottom:none;}
+  .chkrow .chk{width:26px; height:26px; border-radius:9px; border:2px solid var(--border); flex:none;
+    display:flex; align-items:center; justify-content:center; font-size:15px; color:#fff; background:#fff;}
+  .chkrow.done .chk{background:var(--accent); border-color:var(--accent);}
+  .chkrow .name{flex:1; font-size:15px;}
+  .chkrow.done .name{color:var(--muted);}
+  .streak{font-size:12px; color:var(--amber); font-weight:600; white-space:nowrap;}
+  .del{background:none; color:var(--muted); font-size:15px; padding:4px 6px;}
+  .pills{display:flex; gap:6px; overflow-x:auto; margin-bottom:12px; padding-bottom:2px;}
+  .pills button{background:var(--card); border:1px solid var(--border); border-radius:99px;
+    padding:8px 15px; font-size:13px; font-weight:600; color:var(--muted); white-space:nowrap;}
+  .pills button.on{background:var(--accent); border-color:var(--accent); color:#fff;}
+  .pill{display:inline-block; background:var(--accent-soft); color:var(--accent); border-radius:99px; padding:3px 10px; font-size:12px; font-weight:600;}
+  .weekbar{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+  .weekbar button{background:var(--card); border:1px solid var(--border); border-radius:10px; width:36px; height:36px; font-size:16px; color:var(--text);}
+  .weekbar .d{font-weight:700; font-size:15px;}
+  .ex{border:1px solid var(--border); border-radius:12px; padding:12px; margin-bottom:10px; background:var(--card);}
+  .ex.filled{border-color:var(--accent); background:var(--accent-soft);}
+  .ex .ex-name{font-weight:600; font-size:14.5px;}
+  .ex .target{font-size:12.5px; color:var(--muted); margin:3px 0 8px;}
+  .ex .target b{color:var(--accent);}
+  .setrow{display:flex; gap:6px; align-items:center; margin-bottom:6px;}
+  .setrow .sn{width:38px; font-size:12px; color:var(--muted); flex:none;}
+  .setrow input{padding:8px 10px; font-size:14px;}
+  .prev{font-size:12px; color:var(--blue); margin-top:2px;}
+  .bar{height:8px; background:var(--border); border-radius:99px; overflow:hidden; margin-top:6px;}
+  .bar i{display:block; height:100%; background:var(--accent); border-radius:99px; transition:width .3s;}
+  .listline{display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--border); font-size:14px;}
+  .listline:last-child{border-bottom:none;}
+  .listline .kc{color:var(--muted); font-size:13px; white-space:nowrap;}
+  .empty{color:var(--muted); font-size:14px; text-align:center; padding:14px 0;}
+  .chart{width:100%; height:130px; margin-top:6px;}
+  dialog{border:none; border-radius:var(--radius); padding:20px; width:calc(100% - 48px); max-width:360px; box-shadow:0 10px 40px rgba(0,0,0,.15);}
+  dialog::backdrop{background:rgba(0,0,0,.3);}
+  dialog h3{margin:0 0 14px; font-size:16px;}
+  dialog input{margin-bottom:8px;}
+  .info{font-size:12.5px; color:var(--muted); background:var(--bg); border-radius:10px; padding:10px 12px; margin-top:10px; line-height:1.5;}
+</style>
+</head>
+<body>
+
+<header><h1 id="pageTitle">Daily Goals</h1><div class="sub" id="pageSub"></div></header>
+
+<!-- ============ DAILY ============ -->
+<div class="page active" id="p-daily">
+  <div class="card">
+    <h2>Discipline score</h2>
+    <div class="ring-wrap">
+      <div class="ring">
+        <svg width="104" height="104">
+          <circle cx="52" cy="52" r="45" fill="none" stroke="var(--border)" stroke-width="10"/>
+          <circle id="ringFg" cx="52" cy="52" r="45" fill="none" stroke="var(--accent)" stroke-width="10"
+            stroke-linecap="round" stroke-dasharray="282.7" stroke-dashoffset="282.7"/>
+        </svg>
+        <div class="val"><span id="scoreNum">0%</span><span>vandaag</span></div>
+      </div>
+      <div class="scoreparts" id="scoreParts"></div>
+    </div>
+  </div>
+  <div class="card"><h2>🕌 Gebeden</h2><div id="dailyPrayers"></div></div>
+  <div class="card"><h2>💊 Supplementen</h2><div id="dailySupps"></div></div>
+  <div class="card">
+    <h2>✅ Daily goals</h2>
+    <div id="dailyGoals"></div>
+    <div class="row" style="margin-top:12px">
+      <input id="newHabit" placeholder="Nieuwe daily goal…">
+      <button class="btn small" style="flex:none" onclick="addHabit()">+</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>😴 Slaap <button class="btn small ghost" onclick="openSleep()">Loggen</button></h2>
+    <div id="dailySleep" class="muted">—</div>
+  </div>
+</div>
+
+<!-- ============ WEEKLY ============ -->
+<div class="page" id="p-weekly">
+  <div class="card">
+    <h2>🎯 Deze week <span class="pill" id="weeklyCount"></span></h2>
+    <div class="muted" id="weeklyRange" style="margin-bottom:6px"></div>
+    <div id="weeklyGoals"></div>
+    <div class="row" style="margin-top:12px">
+      <input id="newWeekly" placeholder="Nieuwe weekly goal…">
+      <button class="btn small" style="flex:none" onclick="addWeekly()">+</button>
+    </div>
+    <div class="info">Weekly goals resetten elke maandag. Vaste goals blijven staan, eenmalige kun je verwijderen.</div>
+  </div>
+</div>
+
+<!-- ============ GYM ============ -->
+<div class="page" id="p-gym">
+  <div class="pills" id="gymPills">
+    <button class="on" onclick="gymView='log';renderGymPills(this)">Loggen</button>
+    <button onclick="gymView='prog';renderGymPills(this)">Progressie</button>
+    <button onclick="gymView='info';renderGymPills(this)">Schema info</button>
+  </div>
+  <div id="gymLog">
+    <div class="weekbar">
+      <button onclick="chWeek(-1)">‹</button>
+      <div class="d" id="gymWeek"></div>
+      <button onclick="chWeek(1)">›</button>
+    </div>
+    <div class="pills" id="dayPills"></div>
+    <div id="gymExercises"></div>
+    <div class="row" style="margin-top:4px">
+      <button class="btn ghost" onclick="openAddEx()">+ Oefening</button>
+      <button class="btn ghost" id="editBtn" onclick="toggleEdit()">✏️ Bewerken</button>
+    </div>
+  </div>
+  <div id="gymProg" style="display:none">
+    <div class="card">
+      <h2>Progressie per oefening</h2>
+      <select id="progSelect" onchange="renderProg()"></select>
+      <svg class="chart" id="progChart" viewBox="0 0 340 130" preserveAspectRatio="none"></svg>
+      <div id="progTable" style="font-size:13px; margin-top:8px;"></div>
+    </div>
+  </div>
+  <div id="gymInfo" style="display:none">
+    <div class="card">
+      <h2>📅 Schema startdatum</h2>
+      <div class="muted" style="margin-bottom:8px">Stel in wanneer week 1 begint (maandag van die week). De app selecteert dan automatisch de juiste week en trainingsdag.</div>
+      <input type="date" id="startDateInput" onchange="setStartDate(this.value)">
+      <div class="muted" id="startDateInfo" style="margin-top:8px"></div>
+    </div>
+    <div class="card">
+      <h2>12-Week Full Body Hypertrophy — WO / VR / ZO</h2>
+      <div class="info">
+        <b>Format:</b> "8 @2" = werkgewicht op 2 RIR. Set 2 = zelfde reps, −10% gewicht.<br>
+        <b>Tempo 3111:</b> 3s zakken · 1s bodem · 1s omhoog · 1s top.<br>
+        <b>+ weken (3, 5, 7, 9, 11):</b> upper +2,5 kg · lower +5 kg.<br>
+        <b>Week 1:</b> kalibratie 2×10. <b>Week 12:</b> deload 2×10 @ ~60%, 3 RIR.<br><br>
+        <b>Startgewichten:</b> OHP 40 kg · Incline DB 34 kg · Pushdown 34 kg · Lat Pulldown 80 kg · Dips/Pull-ups/Chin-ups +40 kg · Curl 30 kg.<br><br>
+        <b>🥩 Eiwitdoel: 180 g per dag</b> — vink af bij daily goals.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ DEEN ============ -->
+<div class="page" id="p-deen">
+  <div class="card"><h2>🕌 5 Gebeden</h2><div id="deenPrayers"></div></div>
+  <div class="card"><h2>📿 Adhkar</h2><div id="deenAdhkar"></div></div>
+  <div class="card"><h2>🔥 Streaks</h2><div class="scoreparts" id="deenStreaks" style="font-size:14px;"></div></div>
+</div>
+
+<!-- ============ MEER ============ -->
+<div class="page" id="p-more">
+  <div class="card">
+    <h2>⚖️ Lichaamsgewicht</h2>
+    <div class="row">
+      <input id="bwInput" type="number" inputmode="decimal" step="0.1" placeholder="Gewicht vandaag (kg)">
+      <button class="btn small" style="flex:none" onclick="logWeight()">Log</button>
+    </div>
+    <svg class="chart" id="bwChart" viewBox="0 0 340 130" preserveAspectRatio="none"></svg>
+    <div id="bwHistory" style="font-size:13px;"></div>
+  </div>
+  <div class="card">
+    <h2>😴 Slaap historie <button class="btn small ghost" onclick="openSleep()">+ Log</button></h2>
+    <div class="muted" style="margin-bottom:8px">Doel: 8 uur</div>
+    <div id="sleepHistory"></div>
+  </div>
+  <div class="card">
+    <h2>💊 Supplementen beheren</h2>
+    <div id="suppManage"></div>
+    <div class="row" style="margin-top:12px">
+      <input id="newSupp" placeholder="Nieuw supplement…">
+      <button class="btn small" style="flex:none" onclick="addSupp()">+</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>💾 Backup</h2>
+    <div class="muted" style="margin-bottom:10px">Je data staat alleen op deze telefoon. Maak regelmatig een backup — die kun je opslaan in Files/iCloud.</div>
+    <div class="row">
+      <button class="btn ghost" onclick="exportData()">⬇️ Exporteer backup</button>
+      <button class="btn ghost" onclick="impFile.click()">⬆️ Herstel backup</button>
+    </div>
+    <input type="file" id="impFile" accept=".json,application/json" style="display:none" onchange="importData(event)">
+  </div>
+</div>
+
+<nav>
+  <button class="on" onclick="go('daily',this)"><span class="ic">✅</span>Daily</button>
+  <button onclick="go('weekly',this)"><span class="ic">🎯</span>Weekly</button>
+  <button onclick="go('gym',this)"><span class="ic">🏋️</span>Gym</button>
+  <button onclick="go('deen',this)"><span class="ic">🕌</span>Deen</button>
+  <button onclick="go('more',this)"><span class="ic">▦</span>Meer</button>
+</nav>
+
+<!-- Dialogs -->
+<dialog id="dlgEx">
+  <h3>Oefening toevoegen</h3>
+  <div class="muted" style="margin-bottom:8px">Wordt toegevoegd aan de geselecteerde dag</div>
+  <input id="exName" placeholder="Naam oefening">
+  <div class="row"><input id="exTempo" placeholder="Tempo (bv. 3111)"><input id="exStart" type="number" placeholder="Startgewicht kg"></div>
+  <label style="font-size:14px;display:flex;gap:8px;align-items:center;margin:6px 0 12px"><input type="checkbox" id="exLower" style="width:auto"> Benen-oefening (+5 kg op +weken)</label>
+  <div class="row"><button class="btn ghost" onclick="dlgEx.close()">Annuleer</button><button class="btn" onclick="saveNewEx()">Toevoegen</button></div>
+</dialog>
+
+<dialog id="dlgSleep">
+  <h3>Slaap loggen (afgelopen nacht)</h3>
+  <label class="muted">Naar bed</label><input id="sBed" type="time">
+  <label class="muted">Opgestaan</label><input id="sWake" type="time">
+  <div class="row"><button class="btn ghost" onclick="dlgSleep.close()">Annuleer</button><button class="btn" onclick="saveSleep()">Opslaan</button></div>
+</dialog>
+
+<script>
+/* ================= SCHEMA DATA ================= */
+const DAYS=['WO','VR','ZO'];
+const DAYNAMES={WO:'Woensdag — Upper',VR:'Vrijdag — Quads + Upper',ZO:'Zondag — Posterior + Upper'};
+const SCHEMA={
+ WO:[
+  {n:'Machine Chest Press',t:'3111'},
+  {n:'Weighted Pull Ups ⭐',t:'3111',start:40,note:'+kg'},
+  {n:'Incline Dumbbell Press',t:'3111',start:34},
+  {n:'Chest Supported Row (wide)',t:'3111'},
+  {n:'Cable Row (seated)',t:'3111'},
+  {n:'Barbell OHP',t:'3111',start:40},
+  {n:'Machine Lateral Raise',t:'3111'},
+  {n:'Tricep Pushdown (cable)',t:'3111',start:34},
+  {n:'Preacher Curl Machine',t:'3111',start:30}
+ ],
+ VR:[
+  {n:'Hack Squat (machine)',t:'3111',lower:1},
+  {n:'Leg Extension',t:'3111',lower:1},
+  {n:'Leg Press',t:'3111',lower:1},
+  {n:'Seated Leg Curl',t:'3111',lower:1},
+  {n:'Pec Dec',t:'3111'},
+  {n:'Weighted Dips ⭐',t:'2112',start:40,note:'+kg'},
+  {n:'Wide Grip Lat Pulldown',t:'3111',start:80},
+  {n:'Hammer Curl',t:'3111',start:30},
+  {n:'Calf Press',t:'2511',calf:1,lower:1}
+ ],
+ ZO:[
+  {n:'Leg Press',t:'3111',lower:1},
+  {n:'Hip Thrust Machine',t:'3112',lower:1},
+  {n:'Lying Leg Curl',t:'3111',lower:1},
+  {n:'Nordic Curl',t:'3111',lower:1},
+  {n:'Weighted Chin Ups ⭐',t:'3111',start:40,note:'+kg'},
+  {n:'Cable Lateral Raise',t:'3111'},
+  {n:'Overhead Tricep Ext. (cable)',t:'3111'},
+  {n:'Cable Curl',t:'3111',start:30},
+  {n:'Cable Fly',t:'3111'}
+ ]
+};
+const WEEKPLAN={
+ 1:{reps:10,rir:null}, 2:{reps:8,rir:2}, 3:{reps:7,rir:2,plus:1},
+ 4:{reps:8,rir:1}, 5:{reps:7,rir:1,plus:1}, 6:{reps:8,rir:1},
+ 7:{reps:6,rir:1,plus:1}, 8:{reps:7,rir:1}, 9:{reps:5,rir:1,plus:1},
+ 10:{reps:6,rir:1}, 11:{reps:4,rir:1,plus:1}, 12:{reps:10,rir:3}
+};
+const PRAYERS=['Fajr','Dhuhr','Asr','Maghrib','Isha'];
+const ADHKAR=[{id:'aO',name:'Ochtend adhkar'},{id:'aA',name:'Avond adhkar'}];
+
+/* ================= STATE ================= */
+const KEY='ahmad_app_v4';
+let S=JSON.parse(localStorage.getItem(KEY)||'null');
+if(!S){
+  S={
+    gym:{week:1,day:'WO',logs:{},custom:{WO:[],VR:[],ZO:[]},removed:{WO:{},VR:{},ZO:{}}},
+    deenLog:{},
+    supps:['Creatine 5g','Whey/proteïne','Vitamine D3','L-Carnitine'],
+    suppLog:{},
+    habits:[
+      {id:1,name:'🥩 Eiwit doel gehaald (180g)'},
+      {id:2,name:'Vroeg opgestaan'},
+      {id:3,name:'Geen social media verspilling'}
+    ],
+    habitLog:{},
+    weekly:[],
+    weeklyLog:{},
+    sleep:{},
+    weight:{},
+    startDate:null
+  };
+  const old=JSON.parse(localStorage.getItem('ahmad_app_v3')||'null');
+  if(old){
+    ['deenLog','supps','suppLog','habits','habitLog','weekly','weeklyLog','sleep'].forEach(k=>{if(old[k])S[k]=old[k];});
+    if(old.gym){
+      S.gym.week=old.gym.week||1; S.gym.day=old.gym.day||'WO';
+      Object.entries(old.gym.logs||{}).forEach(([w,days])=>{
+        S.gym.logs[w]={};
+        Object.entries(days).forEach(([dy,obj])=>{
+          const nl={};
+          Object.entries(obj).forEach(([k,v])=>{
+            if(k==='_date'){nl._date=v;return;}
+            const ex=(SCHEMA[dy]||[])[+k]; if(ex)nl[ex.n]=v;
+          });
+          S.gym.logs[w][dy]=nl;
+        });
+      });
+    }
+  }
+}
+S.gym.custom=S.gym.custom||{WO:[],VR:[],ZO:[]};
+S.gym.removed=S.gym.removed||{WO:{},VR:{},ZO:{}};
+S.weight=S.weight||{};
+if(S.startDate===undefined)S.startDate=null;
+let nextId=Date.now();
+function save(){localStorage.setItem(KEY,JSON.stringify(S));}
+function today(){return new Date().toLocaleDateString('sv-SE');}
+function weekKey(){
+  const d=new Date();
+  const day=(d.getDay()+6)%7;
+  const mon=new Date(d); mon.setDate(d.getDate()-day);
+  return mon.toLocaleDateString('sv-SE');
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function currentSchemaWeek(){
+  if(!S.startDate)return null;
+  const ms=new Date(weekKey()+'T12:00')-new Date(S.startDate+'T12:00');
+  return Math.floor(ms/(7*24*3600*1000))+1;
+}
+(function autoSelect(){
+  const cw=currentSchemaWeek();
+  if(cw&&cw>=1&&cw<=12)S.gym.week=cw;
+  const wd=new Date().getDay(), map={3:'WO',5:'VR',0:'ZO'};
+  if(map[wd])S.gym.day=map[wd];
+})();
+
+/* ================= NAV ================= */
+const titles={daily:'Daily Goals',weekly:'Weekly Goals',gym:'Gym',deen:'Deen',more:'Meer'};
+let page='daily', gymView='log';
+function go(p,btn){
+  page=p;
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.getElementById('p-'+p).classList.add('active');
+  document.querySelectorAll('nav button').forEach(x=>x.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('pageTitle').textContent=titles[p];
+  render();
+}
+function renderGymPills(btn){
+  document.querySelectorAll('#gymPills button').forEach(x=>x.classList.remove('on'));
+  btn.classList.add('on');
+  gymLog.style.display=gymView==='log'?'':'none';
+  gymProg.style.display=gymView==='prog'?'':'none';
+  gymInfo.style.display=gymView==='info'?'':'none';
+  render();
+}
+
+/* ================= SCORE ================= */
+function scoreFor(d){
+  const parts=[];
+  const dl=S.deenLog[d]||{};
+  parts.push({name:'🕌 Gebeden',got:PRAYERS.filter(p=>dl[p]).length,of:5,w:3});
+  parts.push({name:'📿 Adhkar',got:ADHKAR.filter(a=>dl[a.id]).length,of:2,w:1});
+  const sl=S.suppLog[d]||{};
+  if(S.supps.length)parts.push({name:'💊 Supps',got:S.supps.filter((_,i)=>sl[i]).length,of:S.supps.length,w:1});
+  const hl=S.habitLog[d]||{};
+  if(S.habits.length)parts.push({name:'✅ Daily goals',got:S.habits.filter(h=>hl[h.id]).length,of:S.habits.length,w:2});
+  const wd=new Date(d+'T12:00').getDay();
+  if([3,5,0].includes(wd)){
+    const logged=Object.values(S.gym.logs).some(wk=>Object.values(wk).some(dy=>dy._date===d));
+    parts.push({name:'🏋️ Training',got:logged?1:0,of:1,w:2});
+  }
+  parts.push({name:'😴 Slaap gelogd',got:S.sleep[d]?1:0,of:1,w:1});
+  let num=0,den=0; parts.forEach(p=>{num+=p.w*(p.got/p.of);den+=p.w;});
+  return {pct:den?Math.round(100*num/den):0,parts};
+}
+
+/* ================= RENDER ================= */
+function render(){
+  const d=today();
+  document.getElementById('pageSub').textContent=new Date().toLocaleDateString('nl-NL',{weekday:'long',day:'numeric',month:'long'});
+
+  if(page==='daily'){
+    const sc=scoreFor(d);
+    scoreNum.textContent=sc.pct+'%';
+    ringFg.style.strokeDashoffset=282.7*(1-sc.pct/100);
+    scoreParts.innerHTML=sc.parts.map(p=>`<div><span>${p.name}</span><b>${p.got}/${p.of}</b></div>`).join('');
+    dailyPrayers.innerHTML=prayerHTML(d);
+    dailySupps.innerHTML=suppHTML(d);
+    dailyGoals.innerHTML=habitHTML(d)||'<div class="empty">Voeg je eerste daily goal toe</div>';
+    const sl=S.sleep[d];
+    dailySleep.innerHTML=sl?`<b style="color:var(--text)">${sl.hrs} uur</b> · ${sl.bed} → ${sl.wake} ${sl.hrs>=8?'✅':sl.hrs>=7?'🙂':'⚠️'}`:'Nog niet gelogd';
+  }
+
+  if(page==='weekly'){
+    const wk=weekKey(), wl=S.weeklyLog[wk]||{};
+    const done=S.weekly.filter(g=>wl[g.id]).length;
+    weeklyCount.textContent=`${done}/${S.weekly.length}`;
+    const mon=new Date(wk+'T12:00'), sun=new Date(mon); sun.setDate(mon.getDate()+6);
+    const f=x=>x.toLocaleDateString('nl-NL',{day:'numeric',month:'short'});
+    weeklyRange.textContent=`Ma ${f(mon)} – Zo ${f(sun)}`;
+    weeklyGoals.innerHTML=S.weekly.length?S.weekly.map(g=>
+      `<div class="chkrow ${wl[g.id]?'done':''}"><button class="chk" onclick="toggleWeekly(${g.id})">${wl[g.id]?'✓':''}</button>
+       <span class="name">${esc(g.name)}</span><button class="del" onclick="delWeekly(${g.id})">✕</button></div>`).join('')
+      :'<div class="empty">Nog geen weekly goals — bv. "3x trainen", "1 boek hoofdstuk", "budget bijwerken"</div>';
+  }
+
+  if(page==='gym'){
+    if(gymView==='log')renderGymLog();
+    if(gymView==='prog')renderProgSelect();
+    startDateInput.value=S.startDate||'';
+    const cw=currentSchemaWeek();
+    startDateInfo.textContent=S.startDate?(cw<1?'Schema start nog niet':cw>12?'Schema afgerond 🎉':`Vandaag zit je in week ${cw}`):'Nog niet ingesteld';
+  }
+
+  if(page==='deen'){
+    deenPrayers.innerHTML=prayerHTML(d);
+    deenAdhkar.innerHTML=ADHKAR.map(a=>{
+      const done=(S.deenLog[d]||{})[a.id];
+      return `<div class="chkrow ${done?'done':''}"><button class="chk" onclick="toggleDeen('${a.id}')">${done?'✓':''}</button>
+        <span class="name">${a.name}</span><span class="streak">🔥 ${deenStreak(a.id)}</span></div>`;
+    }).join('');
+    deenStreaks.innerHTML=
+      `<div><span>Alle 5 gebeden</span><span class="streak">🔥 ${allPrayerStreak()} dagen</span></div>`+
+      PRAYERS.map(p=>`<div><span>${p}</span><span class="streak">🔥 ${deenStreak(p)}</span></div>`).join('');
+  }
+
+  if(page==='more'){
+    const dates=Object.keys(S.sleep).sort().reverse().slice(0,14);
+    sleepHistory.innerHTML=dates.length?dates.map(k=>{
+      const s=S.sleep[k];
+      return `<div class="listline"><span>${new Date(k+'T12:00').toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'short'})}</span>
+        <span class="kc"><b style="color:var(--text)">${s.hrs}u</b> · ${s.bed}→${s.wake} ${s.hrs>=8?'✅':s.hrs>=7?'🙂':'⚠️'}</span></div>`;
+    }).join(''):'<div class="empty">Nog niks gelogd</div>';
+    suppManage.innerHTML=S.supps.map((s,i)=>
+      `<div class="chkrow"><span class="name">${esc(s)}</span><button class="del" onclick="delSupp(${i})">✕</button></div>`).join('')
+      ||'<div class="empty">—</div>';
+    renderWeight();
+  }
+}
+
+function renderWeight(){
+  const entries=Object.entries(S.weight).sort((a,b)=>a[0]<b[0]?-1:1);
+  const last=entries.slice(-15);
+  const svg=document.getElementById('bwChart');
+  if(last.length<1){svg.innerHTML='';bwHistory.innerHTML='<div class="empty">Nog geen gewicht gelogd</div>';return;}
+  const vals=last.map(e=>+e[1]);
+  const min=Math.min(...vals)-1, max=Math.max(...vals)+1;
+  const X=i=>15+(last.length<2?155:i*(310/(last.length-1))), Y=v=>120-((v-min)/(max-min||1))*105;
+  const path=last.map((e,i)=>(i?'L':'M')+X(i).toFixed(1)+' '+Y(+e[1]).toFixed(1)).join(' ');
+  svg.innerHTML=
+    last.map((e,i)=>`<circle cx="${X(i)}" cy="${Y(+e[1])}" r="4" fill="var(--accent)"/>
+      <text x="${X(i)}" y="${Y(+e[1])-8}" font-size="9" text-anchor="middle" fill="var(--muted)">${e[1]}</text>`).join('')+
+    `<path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"/>`;
+  const diff=vals.length>1?(vals[vals.length-1]-vals[0]).toFixed(1):null;
+  bwHistory.innerHTML=(diff!==null?`<div class="listline"><span>Verschil (deze periode)</span><span class="kc"><b style="color:var(--text)">${diff>0?'+':''}${diff} kg</b></span></div>`:'')+
+    entries.slice(-7).reverse().map(([k,v])=>
+    `<div class="listline"><span>${new Date(k+'T12:00').toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'short'})}</span>
+     <span class="kc"><b style="color:var(--text)">${v} kg</b></span></div>`).join('');
+}
+
+function prayerHTML(d){
+  const dl=S.deenLog[d]||{};
+  return PRAYERS.map(p=>
+    `<div class="chkrow ${dl[p]?'done':''}"><button class="chk" onclick="toggleDeen('${p}')">${dl[p]?'✓':''}</button>
+     <span class="name">${p}</span><span class="streak">🔥 ${deenStreak(p)}</span></div>`).join('');
+}
+function suppHTML(d){
+  const sl=S.suppLog[d]||{};
+  return S.supps.map((s,i)=>
+    `<div class="chkrow ${sl[i]?'done':''}"><button class="chk" onclick="toggleSupp(${i})">${sl[i]?'✓':''}</button>
+     <span class="name">${esc(s)}</span></div>`).join('')||'<div class="empty">Geen supplementen</div>';
+}
+function habitHTML(d){
+  const hl=S.habitLog[d]||{};
+  return S.habits.map(h=>
+    `<div class="chkrow ${hl[h.id]?'done':''}"><button class="chk" onclick="toggleHabit(${h.id})">${hl[h.id]?'✓':''}</button>
+     <span class="name">${esc(h.name)}</span><span class="streak">🔥 ${habitStreak(h.id)}</span>
+     <button class="del" onclick="delHabit(${h.id})">✕</button></div>`).join('');
+}
+
+/* ---- streaks ---- */
+function genStreak(check){
+  let n=0; const d=new Date();
+  if(!check(d.toLocaleDateString('sv-SE'))) d.setDate(d.getDate()-1);
+  while(check(d.toLocaleDateString('sv-SE'))){n++;d.setDate(d.getDate()-1);}
+  return n;
+}
+const deenStreak=k=>genStreak(dt=>(S.deenLog[dt]||{})[k]);
+const allPrayerStreak=()=>genStreak(dt=>PRAYERS.every(p=>(S.deenLog[dt]||{})[p]));
+const habitStreak=id=>genStreak(dt=>(S.habitLog[dt]||{})[id]);
+
+/* ================= GYM ================= */
+let editMode=false;
+function toggleEdit(){editMode=!editMode;render();}
+function getExercises(dy){
+  const rem=S.gym.removed[dy]||{};
+  return SCHEMA[dy].filter(e=>!rem[e.n]).concat(S.gym.custom[dy]||[]);
+}
+function chWeek(n){ S.gym.week=Math.min(12,Math.max(1,S.gym.week+n)); save(); render(); }
+function setDay(dy){ S.gym.day=dy; save(); render(); }
+function getLog(w,dy){ S.gym.logs[w]=S.gym.logs[w]||{}; S.gym.logs[w][dy]=S.gym.logs[w][dy]||{}; return S.gym.logs[w][dy]; }
+function prevWeight(w,dy,name){
+  for(let k=w-1;k>=1;k--){
+    const l=((S.gym.logs[k]||{})[dy]||{})[name];
+    if(l&&l[0]&&l[0].kg) return {w:k,kg:l[0].kg,reps:l[0].reps};
+  }
+  return null;
+}
+function renderGymLog(){
+  const w=S.gym.week, dy=S.gym.day, wp=WEEKPLAN[w];
+  gymWeek.textContent=`Week ${w} van 12`;
+  dayPills.innerHTML=DAYS.map(x=>`<button class="${x===dy?'on':''}" onclick="setDay('${x}')">${DAYNAMES[x]}</button>`).join('');
+  editBtn.textContent=editMode?'✔️ Klaar':'✏️ Bewerken';
+  const log=getLog(w,dy);
+  gymExercises.innerHTML=getExercises(dy).map((ex,i)=>{
+    const l=log[ex.n]||[{},{}];
+    const target=ex.calf?'2×5 @0 RIR (tempo 2511)':(w===1?'2×10 kalibratie':w===12?'2×10 @~60% deload':`Set 1: ${wp.reps} @${wp.rir} RIR · Set 2: ${wp.reps} reps, −10% kg`);
+    const prev=prevWeight(w,dy,ex.n);
+    const startHint=ex.start?` · start ${ex.note==='+kg'?'+':''}${ex.start} kg`:'';
+    const filled=l[0]&&l[0].kg;
+    return `<div class="ex ${filled?'filled':''}">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="ex-name">${esc(ex.n)}${ex.cust?' <span class="pill">eigen</span>':''}</div>
+        ${editMode?`<button class="del" style="color:var(--red);font-size:17px" onclick="removeEx(${i})">✕</button>`:''}
+      </div>
+      <div class="target"><b>${target}</b> · tempo ${ex.t}${startHint}</div>
+      ${[0,1].map(s=>`<div class="setrow"><span class="sn">Set ${s+1}</span>
+        <input type="number" inputmode="decimal" step="0.5" placeholder="kg" value="${l[s]&&l[s].kg||''}"
+          onchange="logSet(${i},${s},'kg',this.value)">
+        <input type="number" inputmode="numeric" placeholder="reps" value="${l[s]&&l[s].reps||''}"
+          onchange="logSet(${i},${s},'reps',this.value)"></div>`).join('')}
+      ${prev?`<div class="prev">Vorige (wk ${prev.w}): ${prev.kg} kg × ${prev.reps||'?'}${wp.plus?` → doel: ${(+prev.kg+(ex.lower?5:2.5))} kg`:''}</div>`:''}
+    </div>`;
+  }).join('')||'<div class="empty">Geen oefeningen — voeg toe met + Oefening</div>';
+}
+function logSet(i,s,f,v){
+  const ex=getExercises(S.gym.day)[i]; if(!ex)return;
+  const log=getLog(S.gym.week,S.gym.day);
+  log[ex.n]=log[ex.n]||[{},{}];
+  log[ex.n][s][f]=v?+v:'';
+  log._date=today();
+  save(); renderGymLog();
+}
+function openAddEx(){exName.value='';exTempo.value='';exStart.value='';exLower.checked=false;dlgEx.showModal();}
+function saveNewEx(){
+  const n=exName.value.trim(); if(!n)return;
+  const dy=S.gym.day;
+  if(getExercises(dy).some(e=>e.n===n)){alert('Deze oefening staat al op deze dag');return;}
+  if((S.gym.removed[dy]||{})[n]){delete S.gym.removed[dy][n];}
+  else S.gym.custom[dy].push({n,t:exTempo.value.trim()||'3111',start:+exStart.value||undefined,lower:exLower.checked?1:0,cust:1});
+  dlgEx.close(); save(); render();
+}
+function removeEx(i){
+  const dy=S.gym.day, ex=getExercises(dy)[i];
+  if(!confirm(`"${ex.n}" verwijderen van ${dy}? (gelogde gewichten blijven bewaard)`))return;
+  if(ex.cust)S.gym.custom[dy]=S.gym.custom[dy].filter(e=>e.n!==ex.n);
+  else{S.gym.removed[dy]=S.gym.removed[dy]||{};S.gym.removed[dy][ex.n]=true;}
+  save(); render();
+}
+function allExercises(){
+  const seen={}, out=[];
+  DAYS.forEach(dy=>getExercises(dy).forEach(ex=>{ if(!seen[ex.n]){seen[ex.n]=1; out.push(ex.n);} }));
+  Object.values(S.gym.logs).forEach(wk=>Object.values(wk).forEach(dl=>Object.keys(dl).forEach(n=>{
+    if(n!=='_date'&&!seen[n]){seen[n]=1;out.push(n);}
+  })));
+  return out;
+}
+function renderProgSelect(){
+  const cur=progSelect.value;
+  progSelect.innerHTML=allExercises().map((n,j)=>`<option value="${j}">${esc(n)}</option>`).join('');
+  if(cur&&+cur<progSelect.options.length)progSelect.value=cur;
+  renderProg();
+}
+function renderProg(){
+  const exs=allExercises(), selName=exs[+progSelect.value||0];
+  const pts=[];
+  for(let w=1;w<=12;w++){
+    let kg=null,reps=null;
+    DAYS.forEach(dy=>{
+      const l=((S.gym.logs[w]||{})[dy]||{})[selName];
+      if(l&&l[0]&&l[0].kg){kg=+l[0].kg;reps=l[0].reps;}
+    });
+    if(kg)pts.push({w,kg,reps});
+  }
+  const svg=document.getElementById('progChart');
+  if(pts.length<1){svg.innerHTML='';progTable.innerHTML='<div class="empty">Nog geen gewichten gelogd voor deze oefening</div>';return;}
+  const min=Math.min(...pts.map(p=>p.kg))*0.9, max=Math.max(...pts.map(p=>p.kg))*1.05||1;
+  const X=w=>15+(w-1)*(310/11), Y=v=>120-((v-min)/(max-min||1))*105;
+  let path=pts.map((p,i)=>(i?'L':'M')+X(p.w).toFixed(1)+' '+Y(p.kg).toFixed(1)).join(' ');
+  svg.innerHTML=
+    pts.map(p=>`<circle cx="${X(p.w)}" cy="${Y(p.kg)}" r="4" fill="var(--accent)"/>
+      <text x="${X(p.w)}" y="${Y(p.kg)-8}" font-size="9" text-anchor="middle" fill="var(--muted)">${p.kg}</text>`).join('')+
+    `<path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"/>`;
+  progTable.innerHTML=pts.map(p=>`<div class="listline"><span>Week ${p.w}</span><span class="kc"><b style="color:var(--text)">${p.kg} kg</b> × ${p.reps||'?'}</span></div>`).join('');
+}
+
+/* ================= ACTIONS ================= */
+function toggleDeen(k){const d=today();S.deenLog[d]=S.deenLog[d]||{};S.deenLog[d][k]=!S.deenLog[d][k];save();render();}
+function toggleSupp(i){const d=today();S.suppLog[d]=S.suppLog[d]||{};S.suppLog[d][i]=!S.suppLog[d][i];save();render();}
+function addSupp(){const el=newSupp;if(!el.value.trim())return;S.supps.push(el.value.trim());el.value='';save();render();}
+function delSupp(i){if(!confirm('Supplement verwijderen?'))return;S.supps.splice(i,1);save();render();}
+function toggleHabit(id){const d=today();S.habitLog[d]=S.habitLog[d]||{};S.habitLog[d][id]=!S.habitLog[d][id];save();render();}
+function addHabit(){const el=newHabit;if(!el.value.trim())return;S.habits.push({id:++nextId,name:el.value.trim()});el.value='';save();render();}
+function delHabit(id){if(!confirm('Daily goal verwijderen? (streak gaat verloren)'))return;S.habits=S.habits.filter(h=>h.id!==id);save();render();}
+function addWeekly(){const el=newWeekly;if(!el.value.trim())return;S.weekly.push({id:++nextId,name:el.value.trim()});el.value='';save();render();}
+function toggleWeekly(id){const wk=weekKey();S.weeklyLog[wk]=S.weeklyLog[wk]||{};S.weeklyLog[wk][id]=!S.weeklyLog[wk][id];save();render();}
+function delWeekly(id){if(!confirm('Weekly goal verwijderen?'))return;S.weekly=S.weekly.filter(g=>g.id!==id);save();render();}
+function openSleep(){const s=S.sleep[today()];sBed.value=s?s.bed:'23:00';sWake.value=s?s.wake:'07:00';dlgSleep.showModal();}
+function saveSleep(){
+  if(!sBed.value||!sWake.value)return;
+  const [bh,bm]=sBed.value.split(':').map(Number),[wh,wm]=sWake.value.split(':').map(Number);
+  let hrs=(wh+wm/60)-(bh+bm/60); if(hrs<0)hrs+=24;
+  S.sleep[today()]={bed:sBed.value,wake:sWake.value,hrs:Math.round(hrs*10)/10};
+  dlgSleep.close();save();render();
+}
+function logWeight(){
+  const v=+bwInput.value;
+  if(!v||v<30||v>250){alert('Vul een geldig gewicht in');return;}
+  S.weight[today()]=v; bwInput.value=''; save(); render();
+}
+function setStartDate(v){
+  if(!v){S.startDate=null;save();render();return;}
+  const d=new Date(v+'T12:00');
+  const day=(d.getDay()+6)%7; d.setDate(d.getDate()-day);
+  S.startDate=d.toLocaleDateString('sv-SE');
+  const cw=currentSchemaWeek();
+  if(cw&&cw>=1&&cw<=12)S.gym.week=cw;
+  save(); render();
+}
+function exportData(){
+  const blob=new Blob([JSON.stringify(S,null,1)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='ahmad-app-backup-'+today()+'.json';
+  document.body.appendChild(a); a.click(); a.remove();
+}
+function importData(e){
+  const f=e.target.files[0]; if(!f)return;
+  f.text().then(t=>{
+    try{
+      const d=JSON.parse(t);
+      if(!d.gym||!d.habits)throw 0;
+      if(!confirm('Backup terugzetten? Huidige data wordt overschreven.'))return;
+      S=d;
+      S.gym.custom=S.gym.custom||{WO:[],VR:[],ZO:[]};
+      S.gym.removed=S.gym.removed||{WO:{},VR:{},ZO:{}};
+      S.weight=S.weight||{};
+      save(); render(); alert('Backup hersteld ✅');
+    }catch(err){alert('Ongeldig backup-bestand');}
+  });
+  e.target.value='';
+}
+if('serviceWorker' in navigator){try{navigator.serviceWorker.register('sw.js').catch(()=>{});}catch(e){}}
+
+document.getElementById('newHabit').addEventListener('keydown',e=>{if(e.key==='Enter')addHabit();});
+document.getElementById('newWeekly').addEventListener('keydown',e=>{if(e.key==='Enter')addWeekly();});
+document.getElementById('newSupp').addEventListener('keydown',e=>{if(e.key==='Enter')addSupp();});
+
+render();
+</script>
+</body>
+</html>
